@@ -1,0 +1,18 @@
+.res_container {
+    border: 1px solid gray;
+    padding: 20px;
+}
+
+.res_list {
+    list-style: none;
+}
+
+.res_list button {
+    all: unset;
+    color: blue;
+    cursor: pointer;
+}
+
+.res_list button:focus {
+    outline: none;
+}
