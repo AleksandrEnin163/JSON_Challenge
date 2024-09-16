@@ -1,58 +1,60 @@
-import { ChangeEvent, useState } from 'react'
-import './App.css'
-import { data } from './data'
-import JsonViewer from './Components/JsonViewer';
+import { ChangeEvent, useCallback, useState } from "react";
+import "./App.css";
+import { data } from "./data";
+import JsonViewer from "./Components/JsonViewer";
 
-
-const getValueByPath = (obj: any, path: string) => {
+const getValueByPath = (obj: { [key: string]: unknown }, path: string) => {
   try {
-    return path.split('.').reduce((acc, part) => {
+    return path.split(".").reduce((acc, part) => {
       const arrayIndexMatch = part.match(/(.+)\[(\d+)\]/);
-      if(arrayIndexMatch) {
+      if (arrayIndexMatch) {
         const [, key, index] = arrayIndexMatch;
-        return acc[key][parseInt(index, 10)];
+        const objectValue = acc[key as keyof typeof acc];
+        if (Array.isArray(objectValue)) {
+          return objectValue[parseInt(index, 10)];
+        }
+        return undefined;
       }
-      return acc[part];
+      return acc[part as keyof typeof acc];
     }, obj);
-  } catch (e) {
-    return undefined
+  } catch {
+    return undefined;
   }
-}
+};
 
 const App = () => {
+  const [path, setPath] = useState<string>("");
+  const [value, setValue] = useState<string>("undefined");
 
-  const [path, setPath] = useState<string>('')
-  const [value, setValue] = useState<string>('undefined')
+  const handlePathChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const newPath = e.target.value;
+    setPath(newPath);
+    const val = getValueByPath(data, newPath.replace("res.", ""));
+    setValue(val !== undefined ? JSON.stringify(val) : "undefined");
+  }, []);
 
-  const handlePathChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newPath = e.target.value
-    setPath(newPath)
-    const val = getValueByPath(data, newPath.replace('res.', ''))
-    setValue(val !== undefined ? JSON.stringify(val) : 'undefined')
-  }
+  const handleClickKey = useCallback((newPath: string) => {
+    setPath(newPath);
+    const val = getValueByPath(data, newPath.replace("res.", ""));
+    setValue(val !== undefined ? JSON.stringify(val) : "undefined");
+  }, []);
 
-  const handleClickKey = (newPath: string) => {
-    setPath(newPath)
-    const val = getValueByPath(data, newPath.replace('res.', ''))
-    setValue(val !== undefined ? JSON.stringify(val) : 'undefined')
-  }
-
-  return(
-    <div className='wrapper'>
+  return (
+    <div className="wrapper">
       <h4>Property</h4>
       <div>
-        <input 
+        <input
           type="text"
           value={path}
           onChange={handlePathChange}
-          placeholder='Enter Path'
+          placeholder="Enter Path"
         />
         <p>{value}</p>
       </div>
       <h4>Response</h4>
-      <JsonViewer data={data} onKeyClick={handleClickKey}/>
+      <JsonViewer data={data} onKeyClick={handleClickKey} />
     </div>
-  )
+  );
 };
 
-export default App
+export default App;
